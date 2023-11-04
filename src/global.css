@@ -39,3 +39,15 @@ body {
   padding: 0;
   line-height: inherit;
 }
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+html {
+  height: 100%;
+}
+body {
+  min-height: 100%;
+}
