@@ -1,4 +1,4 @@
-import { component$, useContext } from "@builder.io/qwik";
+import { $, component$, useContext } from "@builder.io/qwik";
 import { CTX } from "./home";
 
 const months: { value: number; label: string }[] = [
@@ -17,19 +17,23 @@ const months: { value: number; label: string }[] = [
 ];
 
 export default component$(() => {
-  const { month } = useContext(CTX);
+  const ctx = useContext(CTX);
+  const setMonth = $((n: number) => {
+    ctx.month = n;
+  });
 
   return (
     <>
       <select
         id="months"
         class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+        onChange$={(e) => setMonth(Number(e.target.value))}
       >
         {months.map((monthOption) => (
           <option
             key={monthOption.value}
             value={monthOption.value}
-            selected={monthOption.value === month}
+            selected={monthOption.value === ctx.month}
           >
             {monthOption.label}
           </option>

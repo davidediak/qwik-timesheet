@@ -1,6 +1,7 @@
 import {
   component$,
   createContextId,
+  useComputed$,
   useContextProvider,
   useStore,
 } from "@builder.io/qwik";
@@ -30,12 +31,13 @@ const fillMissingWeekdays = (data: WeekTableRow) => {
   }
 };
 
-const getWeekdata = () => {
-  const date = DateTime.local();
-  const days = date.daysInMonth as PossibleDaysInMonth;
+const getWeekdata = (month: number) => {
+  const days = DateTime.local(DateTime.local().year, month)
+    .daysInMonth as PossibleDaysInMonth;
   const daysAsArray = Array.from({ length: days }, (_, i) => i + 1);
+
   const weekData = daysAsArray.map((day) => {
-    const date = DateTime.local().set({ day });
+    const date = DateTime.local().set({ day, month });
     return {
       dateISO: date.toISODate(),
       weekday: date.weekday,
@@ -60,13 +62,13 @@ export default component$(() => {
     year: DateTime.local().year,
   });
   useContextProvider(CTX, data);
-  const weeks = useStore(getWeekdata());
+  const weeks = useComputed$(() => getWeekdata(data.month));
 
   const a = (
     <>
       <MonthInput />
       <YearInput />
-      {weeks.map((r, i) => {
+      {weeks.value.map((r, i) => {
         return <WeekTable value={r} key={i} />;
       })}
     </>
