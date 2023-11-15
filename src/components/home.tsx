@@ -8,6 +8,7 @@ import {
 import { DateTime, type PossibleDaysInMonth } from "luxon";
 import MonthInput from "~/components/month-input";
 import { type WeekTableRow } from "../types";
+import PrintButton from "./print-button";
 import WeekTable from "./week-table";
 import YearInput from "./year-input";
 
@@ -67,13 +68,18 @@ export default component$(() => {
   );
 
   const a = (
-    <>
+    <div class="flex flex-col gap-5">
       <MonthInput />
       <YearInput />
       {weeks.value.map((r, i) => {
         return <WeekTable value={r} key={i} />;
       })}
-    </>
+      {isYearValid.value && (
+        <div class="flex w-full justify-center print:hidden">
+          <PrintButton />
+        </div>
+      )}
+    </div>
   );
 
   return a;
