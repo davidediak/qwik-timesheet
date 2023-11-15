@@ -31,13 +31,12 @@ const fillMissingWeekdays = (data: WeekTableRow) => {
   }
 };
 
-const getWeekdata = (month: number) => {
-  const days = DateTime.local(DateTime.local().year, month)
-    .daysInMonth as PossibleDaysInMonth;
+const getWeekdata = (month: number, year: number) => {
+  const days = DateTime.local(year, month).daysInMonth as PossibleDaysInMonth;
   const daysAsArray = Array.from({ length: days }, (_, i) => i + 1);
 
   const weekData = daysAsArray.map((day) => {
-    const date = DateTime.local().set({ day, month });
+    const date = DateTime.local().set({ day, month, year });
     return {
       dateISO: date.toISODate(),
       weekday: date.weekday,
@@ -62,7 +61,10 @@ export default component$(() => {
     year: DateTime.local().year,
   });
   useContextProvider(CTX, data);
-  const weeks = useComputed$(() => getWeekdata(data.month));
+  const isYearValid = useComputed$(() => data.year.toString().length === 4);
+  const weeks = useComputed$(() =>
+    isYearValid.value ? getWeekdata(data.month, data.year) : [],
+  );
 
   const a = (
     <>
