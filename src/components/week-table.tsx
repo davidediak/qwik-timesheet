@@ -27,12 +27,9 @@ export default component$<{ value: WeekTableRow }>(({ value }) => {
       </div>
       <div class="grid grid-cols-7">
         {value.map((v, i) => {
-          const dateISO = v.dateISO;
-          const isWeekend = v.weekday === 6 || v.weekday === 7;
-          const value = isWeekend ? "" : "8";
           return (
             <div key={i} class="px-6 py-3">
-              {dateISO ? <Input value={value} /> : ""}
+              {v.dateISO ? <Input value={v.value} /> : ""}
             </div>
           );
         })}
