@@ -1,9 +1,9 @@
 import {
   component$,
   createContextId,
-  useComputed$,
   useContextProvider,
   useStore,
+  useTask$,
 } from "@builder.io/qwik";
 import { DateTime, type PossibleDaysInMonth } from "luxon";
 import MonthInput from "~/components/month-input";
@@ -12,9 +12,15 @@ import PrintButton from "./print-button";
 import WeekTable from "./week-table";
 import YearInput from "./year-input";
 
-export const CTX = createContextId<{ month: number; year: number }>(
-  "HOME_CONTEXT",
-);
+export type ContextData = {
+  month: number;
+  year: number;
+  isYearValid: boolean;
+  weeks: WeekTableRow[];
+  totalHours: number;
+};
+
+export const CTX = createContextId<ContextData>("HOME_CONTEXT");
 
 const fillMissingWeekdays = (data: WeekTableRow) => {
   while (data.at(0)?.weekday !== 1) {
@@ -63,25 +69,51 @@ const getWeekdata = (month: number, year: number) => {
 };
 
 export default component$(() => {
-  const data = useStore({
-    month: DateTime.local().month,
-    year: DateTime.local().year,
-  });
-  useContextProvider(CTX, data);
-
-  const isYearValid = useComputed$(() => data.year.toString().length === 4);
-  const weeks = useComputed$(() =>
-    isYearValid.value ? getWeekdata(data.month, data.year) : [],
+  const data: ContextData = useStore(
+    {
+      month: DateTime.local().month,
+      year: DateTime.local().year,
+      isYearValid: false,
+      weeks: [],
+      totalHours: 0,
+    },
+    { deep: true, reactive: true },
   );
 
+  useTask$(({ track }) => {
+    track(() => data.year);
+    data.isYearValid = data.year.toString().length === 4;
+  });
+  useTask$(({ track }) => {
+    track(() => data.year && data.month && data.isYearValid);
+    data.weeks = data.isYearValid ? getWeekdata(data.month, data.year) : [];
+  });
+  useTask$(({ track }) => {
+    track(() => data.weeks);
+    data.totalHours = data.weeks.reduce((acc, curr) => {
+      const total = curr.reduce((acc, curr) => {
+        const value = Number(curr.value);
+        return acc + value;
+      }, 0);
+      return acc + total;
+    }, 0);
+  });
+
+  useContextProvider(CTX, data);
+
   const a = (
-    <div class="flex flex-col gap-5">
+    <div class="flex flex-col gap-4 px-20 py-10">
       <MonthInput />
       <YearInput />
-      {weeks.value.map((r, i) => {
-        return <WeekTable value={r} key={i} />;
+      {data.weeks.map((_, i) => {
+        return <WeekTable rowIndex={i} key={i} />;
       })}
-      {isYearValid.value && (
+      {data.totalHours && (
+        <div class="flex w-full justify-center">
+          <span class="font-bold"> Total Hours: {data.totalHours}</span>
+        </div>
+      )}
+      {data.isYearValid && (
         <div class="flex w-full justify-center print:hidden">
           <PrintButton />
         </div>
