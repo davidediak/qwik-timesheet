@@ -8,7 +8,6 @@ const Input = component$<{ rowIndex: number; colIndex: number }>(
     const setCell = $((v: string) => {
       ctx.weeks.at(rowIndex)!.at(colIndex)!.value = v;
       ctx.weeks = [...ctx.weeks];
-
     });
 
     return (
@@ -25,30 +24,44 @@ const Input = component$<{ rowIndex: number; colIndex: number }>(
 export default component$<{ rowIndex: number }>(({ rowIndex }) => {
   const ctx = useContext(CTX);
   const weekData = ctx.weeks.at(rowIndex);
-
   return (
-    <>
+    <div>
       {/* Header */}
       <div class="grid grid-cols-7">
         {weekData?.map((v, i) => {
           const dateISO = v.dateISO;
-          return (
-            <div class="px-6 py-3 font-bold	" key={i}>
-              {dateISO ? DateTime.fromISO(dateISO).toFormat("dd/MM") : ""}
-            </div>
-          );
+          if (!dateISO) {
+            return (
+              <div class="px-6 py-3 font-medium " key={i}>
+                {""}
+              </div>
+            );
+          } else {
+            const date = DateTime.fromISO(dateISO);
+            const isWeekend = date.weekday === 6 || date.weekday === 7;
+            return (
+              <div
+                class={`px-6 py-3 font-medium ${
+                  isWeekend ? "text-gray-500" : ""
+                }`}
+                key={dateISO}
+              >
+                {date.toFormat("dd/MM")}
+              </div>
+            );
+          }
         })}
-        {/* Actual Input cells */}
       </div>
+      {/* Actual Input cells */}
       <div class="grid grid-cols-7">
         {weekData?.map((v, i) => {
           return (
-            <div key={i} class="px-6 py-3">
+            <div key={i} class="px-6 ">
               {v.dateISO ? <Input rowIndex={rowIndex} colIndex={i} /> : ""}
             </div>
           );
         })}
       </div>
-    </>
+    </div>
   );
 });

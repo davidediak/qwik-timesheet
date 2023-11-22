@@ -11,6 +11,7 @@ import { type WeekTableRow } from "../types";
 import PrintButton from "./print-button";
 import WeekTable from "./week-table";
 import YearInput from "./year-input";
+import WeekDays from './week-days';
 
 export type ContextData = {
   month: number;
@@ -102,13 +103,14 @@ export default component$(() => {
   useContextProvider(CTX, data);
 
   const a = (
-    <div class="flex flex-col gap-4 px-20 py-10">
+    <div class="flex flex-col gap-9 px-20 py-10">
       <MonthInput />
       <YearInput />
+      <WeekDays />
       {data.weeks.map((_, i) => {
         return <WeekTable rowIndex={i} key={i} />;
       })}
-      {data.totalHours && (
+      {!!data.totalHours && (
         <div class="flex w-full justify-center">
           <span class="font-bold"> Total Hours: {data.totalHours}</span>
         </div>
