@@ -1,6 +1,7 @@
 import {
   component$,
   createContextId,
+  useComputed$,
   useContextProvider,
   useStore,
   useTask$,
@@ -9,16 +10,14 @@ import { DateTime, type PossibleDaysInMonth } from "luxon";
 import MonthInput from "~/components/month-input";
 import { type WeekTableRow } from "../types";
 import PrintButton from "./print-button";
+import WeekDays from "./week-days";
 import WeekTable from "./week-table";
 import YearInput from "./year-input";
-import WeekDays from './week-days';
 
 export type ContextData = {
   month: number;
   year: number;
-  isYearValid: boolean;
   weeks: WeekTableRow[];
-  totalHours: number;
 };
 
 export const CTX = createContextId<ContextData>("HOME_CONTEXT");
@@ -74,31 +73,24 @@ export default component$(() => {
     {
       month: DateTime.local().month,
       year: DateTime.local().year,
-      isYearValid: false,
       weeks: [],
-      totalHours: 0,
     },
     { deep: true, reactive: true },
   );
 
+  const isYearValid = useComputed$(() => data.year.toString().length === 4);
+
   useTask$(({ track }) => {
-    track(() => data.year);
-    data.isYearValid = data.year.toString().length === 4;
+    track(() => data.year && data.month && isYearValid.value);
+    data.weeks = isYearValid.value ? getWeekdata(data.month, data.year) : [];
   });
-  useTask$(({ track }) => {
-    track(() => data.year && data.month && data.isYearValid);
-    data.weeks = data.isYearValid ? getWeekdata(data.month, data.year) : [];
-  });
-  useTask$(({ track }) => {
-    track(() => data.weeks);
-    data.totalHours = data.weeks.reduce((acc, curr) => {
-      const total = curr.reduce((acc, curr) => {
-        const value = Number(curr.value);
-        return acc + value;
-      }, 0);
+
+  const totalHours = useComputed$(() =>
+    data.weeks.reduce((acc, curr) => {
+      const total = curr.reduce((acc, curr) => (acc += Number(curr.value)), 0);
       return acc + total;
-    }, 0);
-  });
+    }, 0),
+  );
 
   useContextProvider(CTX, data);
 
@@ -110,12 +102,12 @@ export default component$(() => {
       {data.weeks.map((_, i) => {
         return <WeekTable rowIndex={i} key={i} />;
       })}
-      {!!data.totalHours && (
+      {!!totalHours.value && (
         <div class="flex w-full justify-center">
-          <span class="font-bold"> Total Hours: {data.totalHours}</span>
+          <span class="font-bold"> Total Hours: {totalHours}</span>
         </div>
       )}
-      {data.isYearValid && (
+      {isYearValid.value && (
         <div class="flex w-full justify-center print:hidden">
           <PrintButton />
         </div>
